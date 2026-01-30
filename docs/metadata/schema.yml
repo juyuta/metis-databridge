@@ -1,0 +1,55 @@
+# Metis DataBridge Schema Definition
+version: "1.0"
+description: "Schema configuration for Metis DataBridge metadata"
+
+entities:
+  - name: dataset
+    description: "Dataset metadata entity"
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+      owner:
+        type: string
+      created_at:
+        type: timestamp
+      updated_at:
+        type: timestamp
+      tags:
+        type: array
+        items:
+          type: string
+
+  - name: table
+    description: "Table metadata entity"
+    properties:
+      id:
+        type: string
+        required: true
+      dataset_id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      columns:
+        type: array
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+            type:
+              type: string
+            nullable:
+              type: boolean
+
+relationships:
+  - from: dataset
+    to: table
+    type: one-to-many
