@@ -1,0 +1,83 @@
+"""
+Example pipeline using CSV-based column mappings.
+
+This shows how to use external CSV mapping files for metadata-driven transformations.
+The mapping file defines source → target column transformations including:
+- Column renaming
+- Data type casting
+- Precision/scale for decimals
+- Nullable constraints
+- Default values
+"""
+
+pipeline:
+  name: customer_migration_with_mappings
+  mapping_file: examples/customer_mapping.csv
+  metadata:
+    description: "Migrate customer data using CSV column mappings"
+    owner: "data-team"
+    created_at: "2026-02-06"
+
+# Source configuration - Extract from PostgreSQL
+source:
+  type: postgres
+  config:
+    host: localhost
+    port: 5432
+    database: legacy_system
+    user: readonly_user
+    password: "${LEGACY_DB_PASSWORD}"
+    table: customers
+
+# Sink configuration - Load to staging PostgreSQL
+sink:
+  type: postgres
+  config:
+    host: localhost
+    port: 5432
+    database: analytics_db
+    user: etl_user
+    password: "${ANALYTICS_DB_PASSWORD}"
+    table_name: landing_customers
+    create_if_not_exists: true
+    drop_if_exists: false
+
+# Transformations - applied AFTER mapping transformations
+# These are additional business rules on top of column mappings
+transformations:
+  # Clean up any whitespace in customer names
+  - type: replace
+    column: customer_name
+    find: "^\\s+|\\s+$"
+    replace: ""
+    is_regex: true
+  
+  # Ensure emails are lowercase
+  - type: replace
+    column: email
+    find: "([A-Z])"
+    replace: "\\L$1"
+    is_regex: true
+
+# Data quality validations
+validations:
+  # Check extracted row count
+  - name: row_count_validation
+    type: row_count
+    min: 1
+    max: 1000000
+    level: error
+
+  # Ensure all required fields are populated
+  - name: null_checks
+    type: null_check
+    columns: [customer_id, email, is_active]
+    allow_null: false
+    level: error
+
+  # Check for duplicate customer IDs (should be unique key)
+  - name: unique_customer_ids
+    type: duplicate_check
+    columns: [customer_id]
+    allow_duplicates: false
+    level: error

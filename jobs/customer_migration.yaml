@@ -1,0 +1,103 @@
+"""
+Example pipeline configuration demonstrating ELT pattern.
+
+This file shows how to configure a complete data migration pipeline
+with source extraction, loading to staging, transformation, and validation.
+"""
+
+# Pipeline metadata
+pipeline:
+  name: customer_migration
+  metadata:
+    description: "Migrate customer data from legacy system to staging"
+    owner: "data-team"
+    created_at: "2026-02-06"
+
+# Source configuration - Extract from PostgreSQL
+source:
+  type: postgres
+  config:
+    host: localhost
+    port: 5432
+    database: legacy_system
+    user: readonly_user
+    password: "${LEGACY_DB_PASSWORD}"  # Load from environment
+    table: customers
+
+# Sink configuration - Load to staging/landing PostgreSQL
+sink:
+  type: postgres
+  config:
+    host: localhost
+    port: 5432
+    database: analytics_db
+    user: etl_user
+    password: "${ANALYTICS_DB_PASSWORD}"  # Load from environment
+    table_name: landing_customers
+    create_if_not_exists: true
+    drop_if_exists: false  # Keep historical data in landing
+
+# Transformations applied post-load
+transformations:
+  # Step 1: Rename columns to match target schema
+  - type: rename
+    mappings:
+      cust_id: customer_id
+      cust_name: customer_name
+      email_addr: email
+      phone_num: phone
+
+  # Step 2: Cast data types
+  - type: cast
+    column: customer_id
+    to: integer
+
+  - type: cast
+    column: created_date
+    to: date
+
+  - type: cast
+    column: active_status
+    to: boolean
+
+  # Step 3: Replace null email addresses
+  - type: default
+    column: email
+    value: "unknown@example.com"
+
+  # Step 4: Trim whitespace from names
+  - type: replace
+    column: customer_name
+    find: "^\\s+|\\s+$"
+    replace: ""
+    is_regex: true
+
+# Data quality validations
+validations:
+  # Check row count is reasonable
+  - name: row_count_validation
+    type: row_count
+    min: 1
+    max: 1000000
+    level: error
+
+  # Ensure customer_id is never null
+  - name: customer_id_not_null
+    type: null_check
+    columns: [customer_id]
+    allow_null: false
+    level: error
+
+  # Warn if we find duplicate emails
+  - name: duplicate_emails_check
+    type: duplicate_check
+    columns: [email]
+    allow_duplicates: false
+    level: warning
+
+  # Ensure no duplicate customer IDs
+  - name: duplicate_ids_check
+    type: duplicate_check
+    columns: [customer_id]
+    allow_duplicates: false
+    level: error

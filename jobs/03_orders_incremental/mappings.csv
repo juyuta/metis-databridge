@@ -1,0 +1,10 @@
+order_id,order_id,INTEGER,INTEGER,,,,,false,,Order unique identifier
+order_date,order_date,VARCHAR,DATE,,,,,false,,"Date order was placed"
+customer_id,customer_id,INTEGER,INTEGER,,,,,false,,Customer who placed order
+product_id,product_id,INTEGER,INTEGER,,,,,false,,Product ordered
+quantity,quantity,INTEGER,INTEGER,,,,,false,1,Quantity ordered
+unit_price,unit_price,NUMERIC,DECIMAL,10,2,12,2,false,,Price per unit
+total_amount,order_amount,NUMERIC,DECIMAL,10,2,12,2,false,0.00,Total order amount
+order_status,status,VARCHAR,VARCHAR,,,20,,false,"PENDING",Current order status
+created_at,created_at,VARCHAR,DATETIME,,,,,true,,"Timestamp created"
+updated_at,updated_at,VARCHAR,DATETIME,,,,,true,,"Timestamp last updated"

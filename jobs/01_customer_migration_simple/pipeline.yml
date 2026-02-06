@@ -1,0 +1,39 @@
+pipeline:
+  name: customer_migration_simple
+  sql_transform_file: examples/01_customer_migration_simple/transformations.sql
+  metadata:
+    description: "Simple customer migration - basic ELT workflow"
+    complexity: "beginner"
+
+source:
+  type: postgres
+  config:
+    host: localhost
+    port: 5432
+    database: legacy_db
+    user: postgres
+    password: postgres
+    table: legacy_customers
+
+sink:
+  type: postgres
+  config:
+    host: localhost
+    port: 5432
+    database: analytics_db
+    user: postgres
+    password: postgres
+    table_name: landing_customers
+    create_if_not_exists: true
+
+validations:
+  - name: row_count_check
+    type: row_count
+    min: 1
+    level: error
+
+  - name: required_fields
+    type: null_check
+    columns: [customer_id]
+    allow_null: false
+    level: error

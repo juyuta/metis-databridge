@@ -1,0 +1,53 @@
+pipeline:
+  name: orders_incremental_load
+  mapping_file: examples/03_orders_incremental/mappings.csv
+  sql_transform_file: examples/03_orders_incremental/transformations.sql
+  metadata:
+    description: "Orders incremental load - advanced patterns"
+    complexity: "advanced"
+    patterns:
+      - incremental_load
+      - fact_dimension
+      - aggregations
+      - window_functions
+
+source:
+  type: postgres
+  config:
+    host: localhost
+    port: 5432
+    database: transactional_db
+    user: readonly_user
+    password: postgres
+    table: orders
+
+sink:
+  type: postgres
+  config:
+    host: localhost
+    port: 5432
+    database: data_warehouse
+    user: etl_service
+    password: postgres
+    table_name: landing_orders
+    create_if_not_exists: true
+
+transformations: []
+
+validations:
+  - name: row_count_check
+    type: row_count
+    min: 1
+    level: error
+
+  - name: order_id_not_null
+    type: null_check
+    columns: [order_id]
+    allow_null: false
+    level: error
+
+  - name: no_duplicate_orders
+    type: duplicate_check
+    columns: [order_id]
+    allow_duplicates: false
+    level: error

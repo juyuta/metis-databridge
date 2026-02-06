@@ -1,0 +1,11 @@
+source_column,target_column,source_data_type,target_data_type,source_precision,source_scale,target_precision,target_scale,nullable,default_value,description
+cust_id,customer_id,INTEGER,INTEGER,,,,,false,,Customer unique identifier
+cust_name,customer_name,VARCHAR,VARCHAR,,,255,,true,,"Customer full name"
+email_addr,email,VARCHAR,VARCHAR,,,255,,false,"unknown@example.com",Contact email address
+phone_num,phone,VARCHAR,VARCHAR,,,20,,true,,"Phone number"
+created_date,created_at,VARCHAR,DATE,,,,,true,,"Account creation date"
+balance,account_balance,NUMERIC,DECIMAL,10,2,12,2,true,0.00,Account balance in USD
+active_status,is_active,VARCHAR,BOOLEAN,,,,,false,false,Account active status
+last_updated,updated_at,VARCHAR,DATETIME,,,,,true,,"Last modification timestamp"
+country_code,country,VARCHAR,VARCHAR,,,10,,true,"US",ISO country code
+region_id,region_id,INTEGER,INTEGER,,,,,false,,Geographic region identifier

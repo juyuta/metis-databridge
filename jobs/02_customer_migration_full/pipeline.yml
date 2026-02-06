@@ -1,0 +1,68 @@
+pipeline:
+  name: customer_migration_full
+  mapping_file: examples/02_customer_migration_full/mappings.csv
+  sql_transform_file: examples/02_customer_migration_full/transformations.sql
+  metadata:
+    description: "Complete customer migration - demonstrates all features"
+    complexity: "intermediate"
+    features:
+      - column_mappings
+      - sql_transformations
+      - validation_rules
+      - enrichment
+
+source:
+  type: postgres
+  config:
+    host: localhost
+    port: 5432
+    database: legacy_system
+    user: readonly_user
+    password: postgres
+    table: legacy_customers
+
+sink:
+  type: postgres
+  config:
+    host: localhost
+    port: 5432
+    database: analytics_warehouse
+    user: etl_service
+    password: postgres
+    table_name: landing_customers
+    create_if_not_exists: true
+    drop_if_exists: false
+
+# Optional rule-based transformations (applied after SQL)
+transformations: []
+
+# Data quality validations
+validations:
+  - name: source_row_count
+    type: row_count
+    min: 1
+    level: error
+
+  - name: customer_id_not_null
+    type: null_check
+    columns: [customer_id]
+    allow_null: false
+    level: error
+
+  - name: email_not_null
+    type: null_check
+    columns: [email]
+    allow_null: false
+    level: error
+
+  - name: no_duplicate_ids
+    type: duplicate_check
+    columns: [customer_id]
+    allow_duplicates: false
+    level: error
+
+  - name: no_duplicate_emails
+    type: duplicate_check
+    columns: [email]
+    allow_duplicates: false
+    level: warning

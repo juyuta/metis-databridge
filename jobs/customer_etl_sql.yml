@@ -1,0 +1,80 @@
+"""
+Pipeline configuration using SQL-based transformations.
+
+This example demonstrates the modern declarative SQL approach to data transformation.
+All transformation logic is defined in SQL files, making it:
+- Database-agnostic (portable to other SQL databases)
+- Version controllable (SQL files in git)
+- Team-friendly (DBAs can optimize queries)
+- Scalable (leverages database compute power)
+"""
+
+pipeline:
+  name: customer_etl_sql
+  sql_transform_file: examples/transformations/customer_analytics.sql
+  metadata:
+    description: "Customer migration using SQL-based transformations"
+    owner: "data-engineering"
+    approach: "ELT with SQL transformations"
+    created_at: "2026-02-06"
+
+# Source: Extract from legacy system
+source:
+  type: postgres
+  config:
+    host: legacy.company.com
+    port: 5432
+    database: production
+    user: extraction_user
+    password: "${LEGACY_DB_PASSWORD}"
+    table: legacy_customers
+
+# Sink: Load to modern analytics warehouse
+sink:
+  type: postgres
+  config:
+    host: analytics.company.com
+    port: 5432
+    database: warehouse
+    user: etl_service
+    password: "${WAREHOUSE_PASSWORD}"
+    table_name: landing_customers
+    create_if_not_exists: true
+    drop_if_exists: false
+
+# SQL transformations define business logic
+# These are applied server-side for performance and scalability
+#
+# The SQL file (customer_analytics.sql) contains:
+# 1. Data validation
+# 2. Deduplication
+# 3. Cleaning and standardization
+# 4. Enrichment with calculated fields
+# 5. Final table creation
+# 6. Index creation for analytics
+
+# Additional rule-based transformations (optional)
+# These run after SQL transformations if needed
+transformations: []
+
+# Data quality validations
+validations:
+  # Ensure we extracted data
+  - name: source_row_count
+    type: row_count
+    min: 1
+    level: error
+
+  # Ensure key fields are populated
+  - name: required_fields
+    type: null_check
+    columns: [customer_id, email]
+    allow_null: false
+    level: error
+
+  # Check for unexpected duplicates after transformation
+  - name: no_duplicate_ids
+    type: duplicate_check
+    columns: [customer_id]
+    allow_duplicates: false
+    level: error
